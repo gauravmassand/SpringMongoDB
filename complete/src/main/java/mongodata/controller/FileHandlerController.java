@@ -7,14 +7,16 @@ import mongodata.InsertController;
 import mongodata.dataImports.ExcelReader;
 import mongodata.objects.FundRaisingSumm;
 import mongodata.service.AmazonS3ClientService;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -49,16 +51,22 @@ public class FileHandlerController {
         return response;
     }
 
+
+
     @GetMapping("/download")
-    public String downloadFile(){
-        S3Object don = amazonS3ClientService.downloadFileFromS3Bucket("Fund Raising Template.xlsx", "trrainfiles");
+    public ResponseEntity<byte[]> downloadFile(){
+        S3Object don = amazonS3ClientService.downloadFileFromS3Bucket("2016-2017-TallyData.xlsx", "trrainfiles");
         InputStream in = don.getObjectContent();
+        byte[] bytes =null;
         try {
-            Files.copy(in, Paths.get("/home/tejas/Documents/Relared/data.xlsx"));
+            //FileUtils.copyInputStreamToFile(in, file);
+            bytes = IOUtils.toByteArray(in);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return "done";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + "2016-2017-TallyData.xlsx" + "\"")
+                .body(bytes);
     }
 
     @DeleteMapping
